@@ -632,7 +632,6 @@ You can add dns-subdomain-records to quickly point to domain name resolution. Fo
 dns-subdomain-records:
   - local=127.0.0.1
   - aws=169.254.169.254
-  - e=example.com
 ```
 ```
 7f000001-{id}.hackwithautomation.com
@@ -641,8 +640,8 @@ will response in random of [127.0.0.1]
 will response in random of [127.0.0.1, host]
 7f000001-7f000001---{id}.hackwithautomation.com
 will response in random of [127.0.0.1, 127.0.0.1, host, host]
-local-7f000002-e-aws--{id}.hackwithautomation.com
-will response in random of [127.0.0.1, 127.0.0.2, 169.254.169.254, example.com, host]
+local-7f000002-aws--{id}.hackwithautomation.com
+will response in random of [127.0.0.1, 127.0.0.2, 169.254.169.254, host]
 ```
 
 ## Reverse Proxy
