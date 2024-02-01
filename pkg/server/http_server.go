@@ -513,15 +513,30 @@ func (h *HTTPServer) metricsHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func newProxyHandler(option *Options) func(w http.ResponseWriter, r *http.Request) {
-	var p func(*http.Request) (*url.URL, error) = nil
+	var proxy func(*http.Request) (*url.URL, error) = nil
+	var tlsClientConfig *tls.Config = nil
+
 	if option.HTTPReverseProxy != "" {
 		u, err := url.Parse(option.HTTPReverseProxy)
 		if err != nil {
 			gologger.Error().Msgf("Could not parse http proxy %s: %s\n", option.HTTPReverseProxy, err)
 		}
 		if u != nil {
-			p = http.ProxyURL(u)
+			proxy = http.ProxyURL(u)
 		}
+	}
+
+	if option.HTTPReverseInsecureSkipVerify {
+		tlsClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
+	transport := &http.Transport{
+		TLSClientConfig: tlsClientConfig,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		Proxy: proxy,
 	}
 
 	params := option.HTTPReverseParams
@@ -537,7 +552,6 @@ func newProxyHandler(option *Options) func(w http.ResponseWriter, r *http.Reques
 			query.Del(param) // delete query
 			break
 		}
-
 		if target == nil {
 			http.Error(w, "Bad Gateway", http.StatusBadGateway)
 			return
@@ -547,13 +561,6 @@ func newProxyHandler(option *Options) func(w http.ResponseWriter, r *http.Reques
 		r.Host = target.Host
 
 		proxy := httputil.NewSingleHostReverseProxy(target)
-		transport := &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			Proxy: p,
-		}
 
 		proxy.Transport = transport
 		proxy.ServeHTTP(w, r)
