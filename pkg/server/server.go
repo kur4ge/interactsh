@@ -76,6 +76,8 @@ type Options struct {
 	HTTPReverseParams []string
 	// HTTPReverseProxy is the proxy for reverse proxy server
 	HTTPReverseProxy string
+	// HTTPReverseInsecureSkipVerify controls whether a client verifies the server's certificate chain and host name
+	HTTPReverseInsecureSkipVerify bool
 	// Token required to retrieve interactions
 	Token string
 	// Enable root tld interactions

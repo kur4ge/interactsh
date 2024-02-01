@@ -335,19 +335,20 @@ INPUT:
 	-oie, -origin-ip-ednsopt                 ednsopt code containing origin ip (interactsh behind a reverse proxy)
 
 CONFIG:
-   -config string                      flag configuration file (default "$HOME/.config/interactsh-server/config.yaml")
-   -dr, -dynamic-resp                  enable setting up arbitrary response data
-   -cr, -custom-records string         custom dns records YAML file for DNS server
-   -dsr, -dns-subdomain-records        the mapping relationship between subdomain and resolve, used for dns rebinding
-   -hi, -http-index string             custom index file for http server
-   -hd, -http-directory string         directory with files to serve with http server
-   -hrp, -http-reverse-proxy string[]  the proxy for reverse proxy server
-   -hrps, -http-reverse-params         the parameter list of reverse proxy destination
-   -ds, -disk                          disk based storage
-   -dsp, -disk-path string             disk storage path
-   -csh, -server-header string         custom value of Server header in response
-   -dv, -disable-version               disable publishing interactsh version in response header
-   -rip, -real-ip-from                 defines trusted addresses that are known to send correct replacement addresses
+   -config string                              flag configuration file (default "$HOME/.config/interactsh-server/config.yaml")
+   -dr, -dynamic-resp                          enable setting up arbitrary response data
+   -cr, -custom-records string                 custom dns records YAML file for DNS server
+   -dsr, -dns-subdomain-records                the mapping relationship between subdomain and resolve, used for dns rebinding
+   -hi, -http-index string                     custom index file for http server
+   -hd, -http-directory string                 directory with files to serve with http server
+   -hrp, -http-reverse-proxy string[]          the proxy for reverse proxy server
+   -hrps, -http-reverse-params                 the parameter list of reverse proxy destination
+   -hrisv, -http-reverse-insecure-skip-verify  controls whether a client verifies the server's certificate chain and host name
+   -ds, -disk                                  disk based storage
+   -dsp, -disk-path string                     disk storage path
+   -csh, -server-header string                 custom value of Server header in response
+   -dv, -disable-version                       disable publishing interactsh version in response header
+   -rip, -real-ip-from                         defines trusted addresses that are known to send correct replacement addresses
 
 UPDATE:
    -up, -update                 update interactsh-server to latest version
@@ -647,10 +648,12 @@ will response in random of [127.0.0.1, 127.0.0.2, 169.254.169.254, host]
 ## Reverse Proxy
 The Interactsh http server can optionally enable Reverse Proxy using query parameters. You can use "-hrps" or "-http-reverse-params" followed by the parameter name you want to enable this feature.
 You can use "-hrp", "-http-reverse-proxy" to add a proxy to the reverse proxy. You can use this capability to prevent ssrf.
+You can use "-hrisv", "http-reverse-insecure-skip-verify" to skip verify ssl, like `proxy_ssl_verify on;`
 
 ```
 http-reverse-params: ["_", "u", "proxy", "p"]
 http-reverse-proxy: http://127.0.0.1:8080
+http-reverse-insecure-skip-verify: false
 ```
 
 ```
