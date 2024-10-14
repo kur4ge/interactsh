@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"strings"
 	"time"
 
@@ -60,6 +61,8 @@ type Options struct {
 	SmtpAutoTLSPort int
 	// FtpPort is the port to listen Ftp server on
 	FtpPort int
+	// FtpsPort is the port to listen Ftps server on
+	FtpsPort int
 	// FtpPort is the port to listen Ftp server on
 	LdapPort int
 	// Hostmaster is the hostmaster email for the server.
@@ -122,6 +125,9 @@ type Options struct {
 	ACMEStore *acme.Provider
 	Stats     *Metrics
 	OnResult  OnResultCallback
+
+	Certificates []tls.Certificate
+	CertFiles    []acme.CertificateFiles
 }
 type OnResultCallback func(out interface{})
 

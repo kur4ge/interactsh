@@ -301,21 +301,33 @@ func (h *DNSServer) handleInteraction(domain string, w dns.ResponseWriter, r *dn
 	}
 
 	if foundDomain != "" {
-		parts := strings.Split(domain, ".")
-		for i, part := range parts {
-			subParts := splitSubdomainParts(part)
-			for _, sub := range subParts {
-				if h.options.isCorrelationID(sub) {
-					uniqueID = sub
-					fullID = part
-					if i+1 <= len(parts) {
-						fullID = strings.Join(parts[:i+1], ".")
+		if h.options.ScanEverywhere {
+			chunks := stringsutil.SplitAny(requestMsg, ".\n\t\"'")
+			for _, chunk := range chunks {
+				for part := range stringsutil.SlideWithLength(chunk, h.options.GetIdLength()) {
+					normalizedPart := strings.ToLower(part)
+					if h.options.isCorrelationID(normalizedPart) {
+						uniqueID = normalizedPart
+						fullID = part
+					}
+				}
+			}
+		} else {
+			parts := strings.Split(domain, ".")
+			for i, part := range parts {
+				subParts := splitSubdomainParts(part)
+				for _, sub := range subParts {
+					if h.options.isCorrelationID(sub) {
+						uniqueID = sub
+						fullID = part
+						if i+1 <= len(parts) {
+							fullID = strings.Join(parts[:i+1], ".")
+						}
 					}
 				}
 			}
 		}
 	}
-	uniqueID = strings.ToLower(uniqueID)
 
 	if uniqueID != "" {
 		correlationID := h.options.getCorrelationID(uniqueID)

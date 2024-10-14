@@ -2,10 +2,11 @@ package options
 
 import (
 	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/utils/auth/pdcp"
 	updateutils "github.com/projectdiscovery/utils/update"
 )
 
-const Version = "1.1.8"
+const Version = "1.2.2"
 
 var banner = (`
     _       __                       __       __  
@@ -26,4 +27,10 @@ func GetUpdateCallback(assetName string) func() {
 		ShowBanner()
 		updateutils.GetUpdateToolFromRepoCallback(assetName, Version, "interactsh")()
 	}
+}
+
+// AuthWithPDCP is used to authenticate with PDCP
+func AuthWithPDCP() {
+	ShowBanner()
+	pdcp.CheckNValidateCredentials("interactsh")
 }

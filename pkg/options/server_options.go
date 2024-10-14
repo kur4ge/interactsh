@@ -6,59 +6,59 @@ import (
 )
 
 type CLIServerOptions struct {
-	Config                        string
-	Version                       bool
-	Debug                         bool
-	Domains                       goflags.StringSlice
-	DnsPort                       int
+	Config                   string
+	Version                  bool
+	Debug                    bool
+	Domains                  goflags.StringSlice
 	DnsTTL                        int
 	DnsSubdomainRecords           goflags.StringSlice
-	IPAddress                     string
-	ListenIP                      string
-	HttpPort                      int
-	HttpsPort                     int
-	Hostmasters                   []string
-	LdapWithFullLogger            bool
-	Eviction                      int
-	NoEviction                    bool
-	Responder                     bool
-	Smb                           bool
-	SmbPort                       int
-	SmtpPort                      int
-	SmtpsPort                     int
-	SmtpAutoTLSPort               int
-	FtpPort                       int
-	LdapPort                      int
-	Ftp                           bool
-	Auth                          bool
-	HTTPIndex                     string
-	HTTPDirectory                 string
+	DnsPort                  int
+	IPAddress                string
+	ListenIP                 string
+	HttpPort                 int
+	HttpsPort                int
+	Hostmasters              []string
+	LdapWithFullLogger       bool
+	Eviction                 int
+	NoEviction               bool
+	Responder                bool
+	Smb                      bool
+	SmbPort                  int
+	SmtpPort                 int
+	SmtpsPort                int
+	SmtpAutoTLSPort          int
+	FtpPort                  int
+	LdapPort                 int
+	Ftp                      bool
+	Auth                     bool
+	HTTPIndex                string
+	HTTPDirectory            string
 	HTTPReverseParams             goflags.StringSlice
 	HTTPReverseProxy              string
 	HTTPReverseInsecureSkipVerify bool
-	Token                         string
-	OriginURL                     string
-	RootTLD                       bool
-	FTPDirectory                  string
-	SkipAcme                      bool
-	DynamicResp                   bool
-	CorrelationIdLength           int
-	CorrelationIdNonceLength      int
-	ScanEverywhere                bool
-	CertificatePath               string
-	CustomRecords                 string
-	PrivateKeyPath                string
-	OriginIPHeader                string
-	DiskStorage                   bool
-	DiskStoragePath               string
-	EnablePprof                   bool
-	EnableMetrics                 bool
-	Verbose                       bool
-	DisableUpdateCheck            bool
-	NoVersionHeader               bool
+	Token                    string
+	OriginURL                string
+	RootTLD                  bool
+	FTPDirectory             string
+	SkipAcme                 bool
+	DynamicResp              bool
+	CorrelationIdLength      int
+	CorrelationIdNonceLength int
+	ScanEverywhere           bool
+	CertificatePath          string
+	CustomRecords            string
+	PrivateKeyPath           string
+	OriginIPHeader           string
+	DiskStorage              bool
+	DiskStoragePath          string
+	EnablePprof              bool
+	EnableMetrics            bool
+	Verbose                  bool
+	DisableUpdateCheck       bool
+	NoVersionHeader          bool
 	RealIPFrom                    goflags.StringSlice
 	OriginIPEDNSopt               int
-	HeaderServer                  string
+	HeaderServer             string
 }
 
 func (cliServerOptions *CLIServerOptions) AsServerOptions() *server.Options {
@@ -77,6 +77,7 @@ func (cliServerOptions *CLIServerOptions) AsServerOptions() *server.Options {
 		SmtpsPort:                     cliServerOptions.SmtpsPort,
 		SmtpAutoTLSPort:               cliServerOptions.SmtpAutoTLSPort,
 		FtpPort:                       cliServerOptions.FtpPort,
+		FtpsPort:                 cliServerOptions.FtpsPort,
 		LdapPort:                      cliServerOptions.LdapPort,
 		Auth:                          cliServerOptions.Auth,
 		HTTPIndex:                     cliServerOptions.HTTPIndex,

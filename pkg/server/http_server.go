@@ -273,6 +273,26 @@ func (h *HTTPServer) defaultHandler(w http.ResponseWriter, req *http.Request) {
 
 	reflection := h.options.URLReflection(req.Host)
 	if stringsutil.HasPrefixI(req.URL.Path, "/s/") && h.staticHandler != nil {
+		if h.options.DynamicResp && len(req.URL.Query()) > 0 {
+			values := req.URL.Query()
+			if headers := values["header"]; len(headers) > 0 {
+				for _, header := range headers {
+					if headerParts := strings.SplitN(header, ":", 2); len(headerParts) == 2 {
+						w.Header().Add(headerParts[0], headerParts[1])
+					}
+				}
+			}
+			if delay := values.Get("delay"); delay != "" {
+				if parsed, err := strconv.Atoi(delay); err == nil {
+					time.Sleep(time.Duration(parsed) * time.Second)
+				}
+			}
+			if status := values.Get("status"); status != "" {
+				if parsed, err := strconv.Atoi(status); err == nil {
+					w.WriteHeader(parsed)
+				}
+			}
+		}
 		h.staticHandler.ServeHTTP(w, req)
 	} else if stringsutil.HasPrefixI(req.URL.Path, "/p/") && h.proxyHandler != nil {
 		h.proxyHandler.ServeHTTP(w, req)
