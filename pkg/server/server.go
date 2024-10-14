@@ -40,6 +40,8 @@ type Options struct {
 	// IPAddress is the IP address of the current server.
 	IPAddress string
 	// ListenIP is the IP address to listen servers on
+	IPv6Address string
+	// ListenIP is the IP address to listen servers on
 	ListenIP string
 	// DnsPort is the port to listen DNS servers on
 	DnsPort int

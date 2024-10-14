@@ -45,6 +45,7 @@ func main() {
 	flagSet.CreateGroup("input", "Input",
 		flagSet.StringSliceVarP(&cliOptions.Domains, "domain", "d", []string{}, "single/multiple configured domain to use for server", goflags.CommaSeparatedStringSliceOptions),
 		flagSet.StringVar(&cliOptions.IPAddress, "ip", "", "public ip address to use for interactsh server"),
+		flagSet.StringVar(&cliOptions.IPv6Address, "ipv6", "", "public ipv6 address to use for interactsh server"),
 		flagSet.StringVarP(&cliOptions.ListenIP, "listen-ip", "lip", "0.0.0.0", "public ip address to listen on"),
 		flagSet.IntVarP(&cliOptions.Eviction, "eviction", "e", 30, "number of days to persist interaction data in memory"),
 		flagSet.BoolVarP(&cliOptions.NoEviction, "no-eviction", "ne", false, "disable periodic data eviction from memory"),

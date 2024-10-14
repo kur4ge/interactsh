@@ -332,6 +332,7 @@ Flags:
 INPUT:
    -d, -domain string[]                     single/multiple configured domain to use for server
    -ip string                               public ip address to use for interactsh server
+   -ipv6 string                             public ipv6 address to use for interactsh server
    -lip, -listen-ip string                  public ip address to listen on (default "0.0.0.0")
    -e, -eviction int                        number of days to persist interaction data in memory (default 30)
    -ne, -no-eviction                        disable periodic data eviction from memory
@@ -641,11 +642,12 @@ this is example body
 
 ## DNS Rebinding
 Interactsh dns server supports dns rebinding. Add the hex of the domain name that needs to be randomized before the domain name. If it is empty, the server IP will be used to return.
-You can add dns-subdomain-records to quickly point to domain name resolution. For example
+You can add dns-subdomain-records to quickly point to domain name resolution. This configuration will also support ipv6, and will automatically select A or AAAA. For example
 
 ```yaml
 dns-subdomain-records:
   - local=127.0.0.1
+  - local=::1
   - aws=169.254.169.254
 ```
 ```

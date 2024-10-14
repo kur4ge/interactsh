@@ -32,6 +32,7 @@ type DNSServer struct {
 	mxDomains     map[string]string
 	nsDomains     map[string][]string
 	ipAddress     net.IP
+	ipv6Address   net.IP
 	timeToLive    uint32
 	server        *dns.Server
 	customRecords *customDNSRecords
@@ -57,6 +58,7 @@ func NewDNSServer(network string, options *Options) *DNSServer {
 	server := &DNSServer{
 		options:       options,
 		ipAddress:     net.ParseIP(options.IPAddress),
+		ipv6Address:   net.ParseIP(options.IPv6Address),
 		mxDomains:     mxDomains,
 		nsDomains:     nsDomains,
 		timeToLive:    uint32(options.DnsTTL),
@@ -113,15 +115,19 @@ func (h *DNSServer) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 				}
 			case dns.TypeNS:
 				h.handleNS(domain, m)
-			case dns.TypeA, dns.TypeAAAA:
+			case dns.TypeA:
 				h.handleACNAMEANY(domain, m)
+			case dns.TypeAAAA:
+				h.handleAAAACNAMEANY(domain, m)
 			}
 
 			gologger.Debug().Msgf("Got acme dns response: \n%s\n", m.String())
 		} else {
 			switch question.Qtype {
-			case dns.TypeA, dns.TypeAAAA, dns.TypeCNAME, dns.TypeANY:
+			case dns.TypeA, dns.TypeCNAME, dns.TypeANY:
 				h.handleACNAMEANY(domain, m)
+			case dns.TypeAAAA:
+				h.handleAAAACNAMEANY(domain, m)
 			case dns.TypeMX:
 				h.handleMX(domain, m)
 			case dns.TypeNS:
@@ -173,8 +179,36 @@ func (h *DNSServer) handleACNAMEANY(zone string, m *dns.Msg) {
 	}
 }
 
+// handleAAAACNAMEANY handles AAAA queries for DNS server
+func (h *DNSServer) handleAAAACNAMEANY(zone string, m *dns.Msg) {
+	nsHeader := dns.RR_Header{Name: zone, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: h.timeToLive}
+
+	// If we have a custom record serve it, or default IPv6
+	record := h.customRecords.checkCustomAAAAResponse(zone)
+	switch {
+	case record != "":
+		h.resultFunctionAAAA(nsHeader, zone, net.ParseIP(record), m)
+	default:
+		h.resultFunctionAAAA(nsHeader, zone, h.ipv6Address, m)
+	}
+}
+
 func (h *DNSServer) resultFunction(nsHeader dns.RR_Header, zone string, ipAddress net.IP, m *dns.Msg) {
 	m.Answer = append(m.Answer, &dns.A{Hdr: dns.RR_Header{Name: zone, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: h.timeToLive}, A: ipAddress})
+	dotDomains := []string{zone, dns.Fqdn(h.options.Domains[0])}
+	for _, dotDomain := range dotDomains {
+		if nsDomains, ok := h.nsDomains[dotDomain]; ok {
+			for _, nsDomain := range nsDomains {
+				m.Ns = append(m.Ns, &dns.NS{Hdr: nsHeader, Ns: nsDomain})
+				m.Extra = append(m.Extra, &dns.A{Hdr: dns.RR_Header{Name: nsDomain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: h.timeToLive}, A: h.ipAddress})
+			}
+			return
+		}
+	}
+}
+
+func (h *DNSServer) resultFunctionAAAA(nsHeader dns.RR_Header, zone string, ipAddress net.IP, m *dns.Msg) {
+	m.Answer = append(m.Answer, &dns.AAAA{Hdr: dns.RR_Header{Name: zone, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: h.timeToLive}, AAAA: ipAddress})
 	dotDomains := []string{zone, dns.Fqdn(h.options.Domains[0])}
 	for _, dotDomain := range dotDomains {
 		if nsDomains, ok := h.nsDomains[dotDomain]; ok {
@@ -414,8 +448,10 @@ func (h *DNSServer) getMsgHost(w dns.ResponseWriter, r *dns.Msg) string {
 
 // customDNSRecords is a server for custom dns records
 type customDNSRecords struct {
-	records    map[string]string
-	subdomains map[string]string
+	records            map[string]string
+	v6Records          map[string]string
+	subdomainRecords   map[string]string
+	subdomainV6Records map[string]string
 }
 
 // defaultCustomRecords is the list of default custom DNS records
@@ -426,26 +462,56 @@ var defaultCustomRecords = map[string]string{
 	"oracle":    "192.0.0.192",
 }
 
+// defaultCustomV6Records is the list of default custom DNS records
+var defaultCustomV6Records = map[string]string{
+	"localhost": "::1",
+}
+
 func newCustomDNSRecordsServer(options *Options) *customDNSRecords {
 	subdomainRecords := make(map[string]string)
+	subdomainV6Records := make(map[string]string)
 	for _, m := range options.DnsSubdomainRecords {
 		parts := strings.SplitN(m, "=", 2)
 		if len(parts) == 2 {
-			subdomainRecords[strings.ToLower(parts[0])] = parts[1]
+			ip := net.ParseIP(parts[1])
+			if ip == nil {
+				gologger.Warning().Msgf("Invalid DnsSubdomainRecord: %s, err: Invalid IP address.", m)
+			} else {
+				if ip.To4() != nil {
+					subdomainRecords[strings.ToLower(parts[0])] = parts[1]
+				} else {
+					subdomainV6Records[strings.ToLower(parts[0])] = parts[1]
+				}
+			}
 		}
 	}
-	server := &customDNSRecords{records: make(map[string]string), subdomains: subdomainRecords}
+
+	server := &customDNSRecords{
+		records:            make(map[string]string),
+		v6Records:          make(map[string]string),
+		subdomainRecords:   subdomainRecords,
+		subdomainV6Records: subdomainV6Records,
+	}
 
 	input := options.CustomRecords
 	for k, v := range defaultCustomRecords {
 		server.records[k] = v
 	}
+	for k, v := range defaultCustomV6Records {
+		server.v6Records[k] = v
+	}
+
 	if input != "" {
 		if err := server.readRecordsFromFile(input); err != nil {
 			gologger.Error().Msgf("Could not read custom DNS records: %s", err)
 		}
 	}
 	return server
+}
+
+type customRecordConfig struct {
+	IPv4 map[string]string `yaml:"ipv4"`
+	IPv6 map[string]string `yaml:"ipv6"`
 }
 
 func (c *customDNSRecords) readRecordsFromFile(input string) error {
@@ -455,13 +521,18 @@ func (c *customDNSRecords) readRecordsFromFile(input string) error {
 	}
 	defer file.Close()
 
-	var data map[string]string
+	var data customRecordConfig
+
 	if err := yaml.NewDecoder(file).Decode(&data); err != nil {
 		return errors.Wrap(err, "could not decode file")
 	}
-	for k, v := range data {
+	for k, v := range data.IPv4 {
 		c.records[strings.ToLower(k)] = v
 	}
+	for k, v := range data.IPv6 {
+		c.v6Records[strings.ToLower(k)] = v
+	}
+
 	return nil
 }
 
@@ -488,7 +559,36 @@ func (c *customDNSRecords) checkCustomResponse(zone string) string {
 				continue
 			}
 			ips = append(ips, net.IP(ip).String())
-		} else if ans, ok := c.subdomains[strings.ToLower(part)]; ok {
+		} else if ans, ok := c.subdomainRecords[strings.ToLower(part)]; ok {
+			ips = append(ips, ans)
+		}
+	}
+	if len(ips) == 0 {
+		return ""
+	}
+	return ips[rand.Intn(len(ips))]
+}
+
+// only return IPv6
+func (c *customDNSRecords) checkCustomAAAAResponse(zone string) string {
+	parts := strings.SplitN(zone, ".", 2)
+	if len(parts) != 2 {
+		return ""
+	}
+	if value, ok := c.v6Records[strings.ToLower(parts[0])]; ok {
+		return value
+	}
+
+	subParts := splitSubdomainParts(parts[0])
+	if len(subParts) == 1 {
+		return ""
+	}
+
+	ips := make([]string, 0)
+	for _, part := range subParts {
+		if part == "" {
+			ips = append(ips, "") // "" represent options.IPv6Address
+		} else if ans, ok := c.subdomainV6Records[strings.ToLower(part)]; ok {
 			ips = append(ips, ans)
 		}
 	}
