@@ -247,7 +247,7 @@ interactsh-client | notify
 
 ## Interactsh Web Client
 
-[Interactsh-web](https://github.com/projectdiscovery/interactsh-web) is a free and open-source web client that displays Interactsh interactions in a well-managed dashboard in your browser. It uses the browser's local storage to store and display all incoming interactions. By default, the web client is configured to use **interact.sh** as default interactsh server, and supports other self-hosted public/authencaited interactsh servers as well.
+[Interactsh-web](https://github.com/projectdiscovery/interactsh-web) is a free and open-source web client that displays Interactsh interactions in a well-managed dashboard in your browser. It uses the browser's local storage to store and display all incoming interactions. By default, the web client is configured to use **oast.fun** as default interactsh server, and supports other self-hosted public/authencaited interactsh servers as well.
 
 A hosted instance of **interactsh-web** client is available at https://app.interactsh.com
 
@@ -287,9 +287,9 @@ docker run projectdiscovery/interactsh-client:latest
 
 <img width="2032" alt="burp" src="https://user-images.githubusercontent.com/8293321/135176099-0e3fa01c-bdce-4f04-a94f-de0a34c7abf6.png">
 
-## OWASP ZAP Add-On
+## ZAP Add-On
 
-Interactsh can be used with OWASP ZAP via the [OAST add-on for ZAP](https://www.zaproxy.org/docs/desktop/addons/oast-support/). With ZAP's scripting capabilities, you can create powerful out-of-band scan rules that leverage Interactsh's features. A standalone script template has been provided as an example (it is added automatically when you install the add-on).
+Interactsh can be used with ZAP via the [OAST add-on for ZAP](https://www.zaproxy.org/docs/desktop/addons/oast-support/). With ZAP's scripting capabilities, you can create powerful out-of-band scan rules that leverage Interactsh's features. A standalone script template has been provided as an example (it is added automatically when you install the add-on).
 
 - Install the OAST add-on from the [ZAP Marketplace](https://www.zaproxy.org/addons/).
 - Go to Tools &rarr; Options &rarr; OAST and select **Interactsh**.
@@ -302,9 +302,16 @@ Interactsh can be used with OWASP ZAP via the [OAST add-on for ZAP](https://www.
 ![zap](https://user-images.githubusercontent.com/16446369/135211920-ed24ba5a-5547-4cd4-b6d8-656af9592c20.png)
 *Interactsh in ZAP*
 
-![Options > OAST > General](https://github.com/hahwul/interactsh/assets/13212227/005bb527-3f60-4822-8b76-f9a3fd06df83)
-*`Options` > `OAST` > `General`*
+## Caido Extension
 
+[quickssrf](https://github.com/caido-community/quickssrf) is Caido extension developed and maintained which allows using Interactsh from within Caido Proxy.
+
+- Download latest zip file from [releases](https://github.com/caido-community/quickssrf/releases/) page.
+- Open Caido &rarr; Plugins &rarr; Install Package &rarr; Select zip file &rarr; Next
+- New sidebar named **QuickSSRF** will appear upon successful installation.
+- See the [quickssrf](https://github.com/caido-community/quickssrf) project for more info.
+
+![caido-image](https://github.com/user-attachments/assets/aeb91a15-c2cf-4d1f-98dd-cb77c24a5d42)
 
 -------
 
@@ -349,6 +356,7 @@ INPUT:
 	-oie, -origin-ip-ednsopt                 ednsopt code containing origin ip (interactsh behind a reverse proxy)
 
 CONFIG:
+   -r, -resolvers string[]                     list of resolvers to use (file or comma separated)
    -config string                              flag configuration file (default "$HOME/.config/interactsh-server/config.yaml")
    -dr, -dynamic-resp                          enable setting up arbitrary response data
    -cr, -custom-records string                 custom dns records YAML file for DNS server
@@ -882,8 +890,8 @@ Currently supported metadata services:
 
 Example:
 
-* **aws.interact.sh** points to 169.254.169.254
-* **alibaba.interact.sh** points to 100.100.100.200
+* **aws.oast.fun** points to 169.254.169.254
+* **alibaba.oast.fun** points to 100.100.100.200
 
 -----
 
